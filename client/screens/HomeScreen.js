@@ -3,7 +3,7 @@ import {StyleSheet, View, Text, Button} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 const jwtDecode = require('jwt-decode');
 
-const ProfileScreen = props => {
+const HomeScreen = props => {
 
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
@@ -11,7 +11,7 @@ const ProfileScreen = props => {
     const loadProfile = async () => {
         const token = await AsyncStorage.getItem('token');
         if(!token) {
-            props.navigation.navigate('Authenticate', { screen: 'Login' });
+            props.navigation.navigate('Login');
         }
 
         const decoded = jwtDecode(token);
@@ -22,7 +22,7 @@ const ProfileScreen = props => {
     const logout = props => {
         AsyncStorage.removeItem('token')
             .then(() => {
-                props.navigation.replace('Authenticate', { screen: 'Login' })
+                props.navigation.replace('Login')
             })
             .catch(err => console.log(err));
     }
@@ -59,4 +59,4 @@ const styles = StyleSheet.create({
     }
 })
 
-export default ProfileScreen;
+export default HomeScreen;

@@ -14,9 +14,9 @@ const Card = props => {
                 </View>
                 <View style={styles.imageContainer}>
                     <ImageBackground source={{uri: props.image}} style={styles.image}>
-                        <Text style={styles.price}>{props.price}</Text>
-                        <View style={styles.year}>
-                            <Text style={styles.yearText}>{props.yearBuilt}</Text>
+                        {/* <Text style={styles.price}>{props.price}</Text> */}
+                        <View style={styles.priceContainer}>
+                            <Text style={styles.price}>${props.price}</Text>
                         </View>
                     </ImageBackground>
                 </View>
@@ -30,15 +30,16 @@ const Card = props => {
 
 const styles = StyleSheet.create({
     card: {
-        shadowColor: 'black',
-        shadowOpacity: 0.25,
-        shadowOffset: { width: 0, height: 2},
-        shadowRadius: 8,
-        borderRadius: 10,
-        backgroundColor: '#ffffff',
+        // shadowColor: 'black',
+        // shadowOpacity: 0.25,
+        // shadowOffset: { width: 0, height: 2},
+        // shadowRadius: 8,
+        backgroundColor: '#2D033B',
         elevation: 5,
         height: 300,
-        margin: 10
+        borderStyle: 'solid',
+        borderColor: 'black',
+        borderBottomWidth: 2
       },
       titleContainer: {
         height: '15%',
@@ -47,7 +48,7 @@ const styles = StyleSheet.create({
       title: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: 'gray'
+        color: '#ffffff'
       },
       imageContainer: {
         width: '100%',
@@ -61,19 +62,12 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'flex-end'
       },
-      price: {
-        fontSize: 30,
-        color: '#fff',
-        margin: 10
-      },
-      year: {
-        margin: 10,
-        backgroundColor: '#2652B0',
-        height: 25,
+      priceContainer: {
+        backgroundColor: '#810CA8',
+        height: 30,
         width: 80,
-        borderRadius: 5
       },
-      yearText: {
+      price: {
         fontSize: 20,
         color: '#fff',
         textAlign: 'center'
@@ -83,7 +77,7 @@ const styles = StyleSheet.create({
       },
       descriptionText: {
         fontSize: 16,
-        color: 'gray'
+        color: '#ffffff'
       }
 });
 

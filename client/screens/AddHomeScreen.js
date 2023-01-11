@@ -30,7 +30,7 @@ const AddHomeScreen = () => {
     const dispatch = useDispatch()
 
   return (
-    <ScrollView>
+    <ScrollView style={styles.container}>
         <Formik
             initialValues={{
                 title: '',
@@ -132,7 +132,7 @@ const AddHomeScreen = () => {
                     </View>
                     
                     <View style={styles.buttonContainer}>
-                        <Button title="Add Home"onPress={props.handleSubmit} />
+                        <Button color='#C147E9' title="Add Home"onPress={props.handleSubmit} />
                     </View>
                 </View>
                 )
@@ -145,9 +145,12 @@ const AddHomeScreen = () => {
 }
 
 const styles = StyleSheet.create({
+    container: {
+        backgroundColor: '#2D033B'
+    },
     form: {
         margin: 20,
-        backgroundColor: '#ffffff',
+        backgroundColor: '#810CA8',
         padding: 20,
         borderRadius: 10,
     },
@@ -156,6 +159,7 @@ const styles = StyleSheet.create({
     },
     label: {
         marginVertical: 10,
+        color: '#ffffff'
     },
     input: {
         paddingHorizontal: 2,
@@ -164,7 +168,7 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
     },
     buttonContainer: {
-        marginTop: 20,
+        marginTop: 10,
     },
     error: {
         color: 'red',

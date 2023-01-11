@@ -8,7 +8,16 @@ app.get('/', (req, res) => {
     res.send('Welcome to the house listing API')
 })
 
+const authRoutes = require('./routes/auth')
+const verifyToken = require('./routes/verifyToken')
+
 app.use('/api/houses', houses)
+
+app.get('/api/user/profile', verifyToken, (req, res) => {
+    res.send({ success: true, data: req.user })
+})
+
+app.use('/api/users', authRoutes)
 
 require('dotenv').config();
 const port = process.env.PORT || 3000;

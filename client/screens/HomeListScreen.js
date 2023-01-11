@@ -67,7 +67,8 @@ const HomeListScreen = (props) => {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1
+        flex: 1,
+        backgroundColor: '#2D033B'
     },
     centered: {
       flex: 1,
