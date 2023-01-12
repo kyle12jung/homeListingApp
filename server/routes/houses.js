@@ -1,58 +1,66 @@
 const express = require("express");
+const mongoose = require('mongoose')
+const Grid = require("gridfs-stream");
 const { body, validationResult } = require("express-validator");
-const Grid = require("gridfs");
+const fs = require('fs')
 
 const House = require("../models/House");
+const File = require("../models/File");
 
 const router = express.Router();
+
+
+const conn = mongoose.connection;
+let gfs;
+conn.once("open", () => {
+    gfs = new mongoose.mongo.GridFSBucket(conn.db)
+});
+
+const multer = require('multer');
+const storage = multer.diskStorage({
+    destination: function(req, file, cb) {
+        cb(null, 'uploads/')
+    },
+    filename: function(req, file, cb) {
+        cb(null, Date.now() + '.jpg') //Appending .jpg
+    }
+})
+
+const upload = multer({ storage: storage });
+
+
 
 // /api/houses
 router.post(
     "/",
-    body("title")
-    .isLength({ min: "3", max: "20" })
-    .withMessage("Title should be between 3 to 20 characters"),
-    body("description")
-    .isLength({ min: "10", max: "200" })
-    .withMessage("Description should be between 10 to 200 characters"),
-    body("address")
-    .isLength({ min: "10", max: "100" })
-    .withMessage("Address should be between 10 to 100 characters"),
-    body("price").isNumeric().withMessage("Price should be a number"),
-    body("bedroom").isNumeric().withMessage("Price should be a number"),
-    body("bathroom").isNumeric().withMessage("Price should be a number"),
+
+    upload.array('images'),
     async(req, res) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
 
         const house = new House({
             title: req.body.title,
             address: req.body.address,
-            bedroom: req.body.bedrooms,
-            bathroom: req.body.bathrooms,
+            bedroom: req.body.bedroom,
+            bathroom: req.body.bathroom,
             description: req.body.description,
             price: req.body.price,
         });
 
         // Upload and store the image(s) in gridfs
         const files = req.files;
-        if (files) {
+        console.log(files[0].filename)
+        if (files && files.length) {
             house.images = await Promise.all(
                 files.map(async(file) => {
-                    const writestream = gfs.createWriteStream({
-                        filename: file.name,
-                        mode: "w",
-                        content_type: file.mimetype,
-                    });
-                    await fs.createReadStream(file.path).pipe(writestream);
+                    const stream = gfs.openUploadStream(file.filename);
+                    console.log(file)
+                    fs.createReadStream(file.path).pipe(stream);
                     const uploadedFile = await new Promise((resolve, reject) => {
-                        writestream.on("close", async(file) => {
+                        stream.on("finish", async(file) => {
                             try {
                                 const uploadedFile = new File({
                                     filename: file.filename,
-                                    contentType: file.contentType,
+                                    contentType: "multipart/form-data",
                                     metadata: req.body.metadata,
                                 });
                                 await uploadedFile.save();
@@ -78,6 +86,26 @@ router.post(
             .catch((err) => console.log(err));
     }
 );
+
+// body("title")
+// .isLength({ min: "3", max: "20" })
+// .withMessage("Title should be between 3 to 20 characters"),
+// body("description")
+// .isLength({ min: "10", max: "200" })
+// .withMessage("Description should be between 10 to 200 characters"),
+// body("address")
+// .isLength({ min: "10", max: "100" })
+// .withMessage("Address should be between 10 to 100 characters"),
+// body("price").isNumeric().withMessage("Price should be a number"),
+// body("bedroom").isNumeric().withMessage("Number of bedrooms should be a number"),
+// body("bathroom").isNumeric().withMessage("Number of bathrooms should be a number"),
+// (req, res, next) => {
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty()) {
+//         return res.status(422).json({ errors: errors.array() });
+//     }
+//     next();
+// },
 
 // /api/houses
 router.get("/", (req, res) => {
