@@ -9,7 +9,6 @@ const File = require("../models/File");
 
 const router = express.Router();
 
-
 const conn = mongoose.connection;
 let gfs;
 conn.once("open", () => {
@@ -33,9 +32,8 @@ const upload = multer({ storage: storage });
 // /api/houses
 router.post(
     "/",
-
     upload.array('images'),
-    async(req, res) => {
+    async(req, res, next) => {
 
         const house = new House({
             title: req.body.title,
@@ -48,12 +46,10 @@ router.post(
 
         // Upload and store the image(s) in gridfs
         const files = req.files;
-        console.log(files[0].filename)
         if (files && files.length) {
             house.images = await Promise.all(
                 files.map(async(file) => {
                     const stream = gfs.openUploadStream(file.filename);
-                    console.log(file)
                     fs.createReadStream(file.path).pipe(stream);
                     const uploadedFile = await new Promise((resolve, reject) => {
                         stream.on("finish", async(file) => {
@@ -84,28 +80,28 @@ router.post(
                 });
             })
             .catch((err) => console.log(err));
+
+        next();
+    },
+    body("title")
+    .isLength({ min: "3", max: "20" })
+    .withMessage("Title should be between 3 to 20 characters"),
+    body("description")
+    .isLength({ min: "10", max: "200" })
+    .withMessage("Description should be between 10 to 200 characters"),
+    body("address")
+    .isLength({ min: "10", max: "100" })
+    .withMessage("Address should be between 10 to 100 characters"),
+    body("price").isNumeric().withMessage("Price should be a number"),
+    body("bedroom").isNumeric().withMessage("Number of bedrooms should be a number"),
+    body("bathroom").isNumeric().withMessage("Number of bathrooms should be a number"),
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(422).json({ errors: errors.array() });
+        }
     }
 );
-
-// body("title")
-// .isLength({ min: "3", max: "20" })
-// .withMessage("Title should be between 3 to 20 characters"),
-// body("description")
-// .isLength({ min: "10", max: "200" })
-// .withMessage("Description should be between 10 to 200 characters"),
-// body("address")
-// .isLength({ min: "10", max: "100" })
-// .withMessage("Address should be between 10 to 100 characters"),
-// body("price").isNumeric().withMessage("Price should be a number"),
-// body("bedroom").isNumeric().withMessage("Number of bedrooms should be a number"),
-// body("bathroom").isNumeric().withMessage("Number of bathrooms should be a number"),
-// (req, res, next) => {
-//     const errors = validationResult(req);
-//     if (!errors.isEmpty()) {
-//         return res.status(422).json({ errors: errors.array() });
-//     }
-//     next();
-// },
 
 // /api/houses
 router.get("/", (req, res) => {
