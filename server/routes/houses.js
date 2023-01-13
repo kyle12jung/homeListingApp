@@ -1,6 +1,10 @@
 const express = require("express");
 const mongoose = require('mongoose')
-const Grid = require("gridfs-stream");
+const bodyParser = require('body-parser')
+    // const Grid = require("gridfs-stream");
+const multer = require('multer');
+const multerS3 = require('multer-s3');
+const AWS = require('aws-sdk');
 const { body, validationResult } = require("express-validator");
 const fs = require('fs')
 
@@ -9,38 +13,36 @@ const File = require("../models/File");
 
 const router = express.Router();
 
-const bodyParser = require('body-parser')
+// const conn = mongoose.connection;
+// let gfs;
+// conn.once("open", () => {
+//     gfs = new mongoose.mongo.GridFSBucket(conn.db)
+// });
 
-const conn = mongoose.connection;
-let gfs;
-conn.once("open", () => {
-    gfs = new mongoose.mongo.GridFSBucket(conn.db)
+require('dotenv').config();
+const S3ACCESSKEY_ID = process.env.S3ACCESSKEY_ID;
+const S2ACCESSKEY_SECRET = process.env.S2ACCESSKEY_SECRET;
+
+AWS.config.update({
+    accessKeyId: S3ACCESSKEY_ID,
+    secretAccessKey: S2ACCESSKEY_SECRET
 });
+const s3 = new AWS.S3()
 
-const multer = require('multer');
-const storage = multer.diskStorage({
-    destination: function(req, file, cb) {
-        cb(null, 'uploads/')
+const storage = multerS3({
+    s3: s3,
+    bucket: 'homehopimagesdev',
+    metadata: function(req, file, cb) {
+        cb(null, { fieldName: file.fieldname });
     },
-    filename: function(req, file, cb) {
-        cb(null, Date.now() + '.jpg')
+    key: function(req, file, cb) {
+        cb(null, Date.now().toString() + '.jpg')
     }
 })
 
-router.use(bodyParser.json());
+const upload = multer({ storage: storage });
 
-const validate = [
-    body("title")
-    .isLength({ min: "3", max: "50" })
-    .withMessage("Title should be between 3 to 50 characters"),
-    body("description")
-    .isLength({ min: "10", max: "200" })
-    .withMessage("Description should be between 10 to 200 characters"),
-    body("address")
-    .isLength({ min: "10", max: "100" })
-    .withMessage("Address should be between 10 to 100 characters"),
-    body("price").isNumeric().withMessage("Price should be a number")
-]
+router.use(bodyParser.json());
 
 // handle form data validation
 router.use((req, res, next) => {
@@ -50,8 +52,6 @@ router.use((req, res, next) => {
     }
     next();
 });
-
-const upload = multer({ storage: storage });
 
 // /api/houses
 router.post(
@@ -75,29 +75,24 @@ router.post(
             price: req.body.price,
         });
 
-        // Upload and store the image(s) in gridfs
+        // Upload and store the image(s) in s3
         const files = req.files;
         if (files && files.length) {
             house.images = await Promise.all(
-                files.map(async(file) => {
-                    const stream = gfs.openUploadStream(file.filename);
-                    fs.createReadStream(file.path).pipe(stream);
-                    const uploadedFile = await new Promise((resolve, reject) => {
-                        stream.on("finish", async(file) => {
-                            try {
-                                const uploadedFile = new File({
-                                    filename: file.filename,
-                                    contentType: "multipart/form-data",
-                                    metadata: req.body.metadata,
-                                });
-                                await uploadedFile.save();
-                                resolve(uploadedFile._id);
-                            } catch (error) {
-                                reject(error);
-                            }
-                        });
+                files.map(async file => {
+                    const params = {
+                        Bucket: "homehopimagesdev",
+                        Key: file.originalname,
+                        Body: fs.createReadStream(file.path)
+                    };
+                    s3.putObject(params, (err, data) => {
+                        if (err) {
+                            console.log(err);
+                            return res.status(500).json({ error: "Failed to upload image" });
+                        } else {
+                            console.log(`Image ${file.originalname} uploaded successfully`);
+                        }
                     });
-                    return uploadedFile;
                 })
             );
         }
