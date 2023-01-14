@@ -1,23 +1,16 @@
 const express = require("express");
 const mongoose = require('mongoose')
 const bodyParser = require('body-parser')
-    // const Grid = require("gridfs-stream");
 const multer = require('multer');
 const multerS3 = require('multer-s3');
 const AWS = require('aws-sdk');
 const { body, validationResult } = require("express-validator");
-const fs = require('fs')
+const path = require('path');
+const mime = require('mime-types');
 
 const House = require("../models/House");
-const File = require("../models/File");
 
 const router = express.Router();
-
-// const conn = mongoose.connection;
-// let gfs;
-// conn.once("open", () => {
-//     gfs = new mongoose.mongo.GridFSBucket(conn.db)
-// });
 
 require('dotenv').config();
 const S3ACCESSKEY_ID = process.env.S3ACCESSKEY_ID;
@@ -40,7 +33,17 @@ const storage = multerS3({
     }
 })
 
-const upload = multer({ storage: storage });
+const upload = multer({
+    storage: storage,
+    fileFilter: function(req, file, callback) {
+        var ext = path.extname(file.originalname);
+        console.log(mime.lookup('.' + ext))
+        if (mime.lookup('.' + ext) != 'image/jpeg' && mime.lookup('.' + ext) != 'image/jpg' && mime.lookup('.' + ext) != 'image/png') {
+            return callback(new Error('Only images are allowed'))
+        }
+        callback(null, true)
+    }
+});
 
 router.use(bodyParser.json());
 
@@ -60,9 +63,9 @@ router.post(
     async(req, res) => {
         if (req.body.title && req.body.title.length < 3) {
             return res.status(400).json({ error: "Title should be at least 3 characters long" });
-        } else if (req.body.address && req.body.title.length < 5) {
+        } else if (req.body.address && req.body.address.length < 5) {
             return res.status(400).json({ error: "Title should be at least 5 characters long" });
-        } else if (req.body.description && req.body.title.description < 10) {
+        } else if (req.body.description && req.body.description.length < 10) {
             return res.status(400).json({ error: "Title should be at least 10 characters long" });
         }
 
@@ -75,48 +78,69 @@ router.post(
             price: req.body.price,
         });
 
-        // Upload and store the image(s) in s3
-        const files = req.files;
-        if (files && files.length) {
-            house.images = await Promise.all(
-                files.map(async file => {
+        if (req.files && req.files.length) {
+            const imageUploadPromises = req.files.map(file => {
+                console.log(file)
+                return new Promise((resolve, reject) => {
                     const params = {
                         Bucket: "homehopimagesdev",
-                        Key: file.originalname,
-                        Body: fs.createReadStream(file.path)
+                        Key: file.location,
+                        Body: file.originalname
                     };
-                    s3.putObject(params, (err, data) => {
+                    console.log(params.Key)
+                    s3.upload(params, (err, data) => {
                         if (err) {
                             console.log(err);
                             return res.status(500).json({ error: "Failed to upload image" });
                         } else {
                             console.log(`Image ${file.originalname} uploaded successfully`);
+                            house.images.push(params.Key);
+                            resolve();
                         }
                     });
+                });
+            });
+
+            await Promise.all(imageUploadPromises)
+                .then(() => {
+                    return house.save()
                 })
-            );
+                .then((result) => {
+                    res.send({
+                        message: "House data created",
+                        data: result,
+                    });
+                })
+                .catch((err) => console.log(err));
         }
 
-        await house
-            .save()
-            .then((result) => {
-                res.send({
-                    message: "House data created",
-                    data: result,
-                });
-            })
-            .catch((err) => console.log(err));
+
     }
 );
 
 // /api/houses
-router.get("/", (req, res) => {
-    House.find()
-        .then((houses) => {
-            res.send(houses);
-        })
-        .catch((err) => console.log(err));
+router.get("/", async(req, res) => {
+    try {
+        const houses = await House.find();
+        const modifiedHouses = houses.map(async house => {
+            const images = await Promise.all(house.images.map(async image => {
+                const url = s3.getSignedUrl('getObject', {
+                    Bucket: 'homehopimagesdev',
+                    Key: image
+                });
+                return url;
+            }));
+            house.images = images;
+            return house;
+        });
+        const resolvedHouses = await Promise.all(modifiedHouses);
+        res.send(resolvedHouses);
+    } catch (err) {
+        console.log(err);
+        res.status(500).send(err);
+    }
 });
+
 
 // api/houses/id
 router.get("/:id", async(req, res) => {
@@ -126,44 +150,21 @@ router.get("/:id", async(req, res) => {
             error: "No house found"
         });
     }
+    const images = await Promise.all(house.images.map(async image => {
+        const params = {
+            Bucket: 'homehopimagesdev',
+            Key: image,
+            Expires: 60 * 5 // URL will expire in 5 minutes
+        };
+        const url = await s3.getSignedUrl('getObject', params);
+        return url;
+    }));
+    house.images = images;
+    console.log(house)
     await res.send(house);
 });
 
-// api/houses/id
-// router.put(
-//     "/:id",
-// body("title")
-// .isLength({ min: "3", max: "50" })
-// .withMessage("Title should be between 3 to 50 characters"),
-// body("description")
-// .isLength({ min: "10", max: "200" })
-// .withMessage("Description should be between 10 to 200 characters"),
-// body("address")
-// .isLength({ min: "10", max: "100" })
-// .withMessage("Address should be between 10 to 100 characters"),
-// body("price").isNumeric().withMessage("Price should be a number"),
-//     (req, res) => {
-//         const errors = validationResult(req);
-//         if (!errors.isEmpty()) {
-//             return res.status(400).json({ errors: errors.array() });
-//         }
-//         const houseID = req.params.id;
-//         House.findById(houseID)
-//             .then((house) => {
-//                 (house.title = req.body.title),
-//                 (house.address = req.body.address),
-//                 (house.homeType = req.body.homeType),
-//                 (house.description = req.body.description),
-//                 (house.price = req.body.price),
-//                 (house.image = req.body.image),
-//                 (house.yearBuilt = req.body.yearBuilt);
 
-//                 return house.save();
-//             })
-//             .then((result) => res.send(result))
-//             .catch((err) => console.log(err));
-//     }
-// );
 
 router.patch(
     "/:id",
@@ -208,3 +209,40 @@ router.delete("/:id", (req, res) => {
 });
 
 module.exports = router;
+
+
+// api/houses/id
+// router.put(
+//     "/:id",
+// body("title")
+// .isLength({ min: "3", max: "50" })
+// .withMessage("Title should be between 3 to 50 characters"),
+// body("description")
+// .isLength({ min: "10", max: "200" })
+// .withMessage("Description should be between 10 to 200 characters"),
+// body("address")
+// .isLength({ min: "10", max: "100" })
+// .withMessage("Address should be between 10 to 100 characters"),
+// body("price").isNumeric().withMessage("Price should be a number"),
+//     (req, res) => {
+//         const errors = validationResult(req);
+//         if (!errors.isEmpty()) {
+//             return res.status(400).json({ errors: errors.array() });
+//         }
+//         const houseID = req.params.id;
+//         House.findById(houseID)
+//             .then((house) => {
+//                 (house.title = req.body.title),
+//                 (house.address = req.body.address),
+//                 (house.homeType = req.body.homeType),
+//                 (house.description = req.body.description),
+//                 (house.price = req.body.price),
+//                 (house.image = req.body.image),
+//                 (house.yearBuilt = req.body.yearBuilt);
+
+//                 return house.save();
+//             })
+//             .then((result) => res.send(result))
+//             .catch((err) => console.log(err));
+//     }
+// );

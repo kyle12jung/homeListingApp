@@ -7,7 +7,7 @@ const HouseSchema = new mongoose.Schema({
     bathroom: { type: Number, required: true },
     description: { type: String, required: true },
     price: { type: Number, required: true },
-    images: [{ type: mongoose.Schema.Types.ObjectId, ref: "File" }],
+    images: [{ type: String }],
 })
 
 module.exports = mongoose.model('House', HouseSchema)
