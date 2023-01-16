@@ -1,8 +1,10 @@
 import React from 'react';
-import {StyleSheet, View, Text, ImageBackground, TouchableOpacity} from 'react-native';
+import {StyleSheet, View, Text, ImageBackground, TouchableOpacity, FlatList, Image} from 'react-native';
+import Slider from './Slider';
+
 
 const Card = props => {
-    return(
+    return (
         <TouchableOpacity
             onPress={() => props.navigation.navigate('HomeDetails', {
               houseId: props.id}
@@ -13,12 +15,15 @@ const Card = props => {
                     <Text style={styles.title}>{props.title.length > 30 ? props.title.slide(0,30)+'...' : props.title}</Text>
                 </View>
                 <View style={styles.imageContainer}>
-                    <ImageBackground source={{uri: props.image}} style={styles.image}>
-                        {/* <Text style={styles.price}>{props.price}</Text> */}
-                        <View style={styles.priceContainer}>
-                            <Text style={styles.price}>${props.price}</Text>
-                        </View>
-                    </ImageBackground>
+                  <Slider data={props.images} style={styles.image}/>
+                </View>
+                <View style={styles.imageTextOverlay}>
+                  <View style={styles.priceContainer}>
+                      <Text style={styles.price}>${props.price}</Text>
+                  </View>
+                  <View style={styles.roomInfoContainer}>
+                      <Text style={styles.roomInfo}>{props.bedroom} bedroom(s), {props.bathroom} bathroom(s)</Text>
+                  </View>
                 </View>
                 <View style={styles.description}>
                     <Text style={styles.descriptionText}>{props.description.length > 100 ? props.description.slice(0, 100)+'...' : props.description}</Text>
@@ -36,13 +41,13 @@ const styles = StyleSheet.create({
         // shadowRadius: 8,
         backgroundColor: '#2D033B',
         elevation: 5,
-        height: 300,
+        height: 500,
         borderStyle: 'solid',
         borderColor: 'black',
         borderBottomWidth: 2
       },
       titleContainer: {
-        height: '15%',
+        height: '10%',
         padding: 10
       },
       title: {
@@ -51,9 +56,10 @@ const styles = StyleSheet.create({
         color: '#ffffff'
       },
       imageContainer: {
-        width: '100%',
-        height: '65%',
-        overflow: 'hidden'
+        width: 400,
+        height: 400,
+        overflow: 'hidden',
+        position: 'relative'
       },
       image: {
         width: '100%',
@@ -62,6 +68,10 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'flex-end'
       },
+      imageTextOverlay: {
+        position: 'absolute',
+        top: 395,
+      },
       priceContainer: {
         backgroundColor: '#810CA8',
         height: 30,
@@ -69,6 +79,16 @@ const styles = StyleSheet.create({
       },
       price: {
         fontSize: 20,
+        color: '#fff',
+        textAlign: 'center'
+      },
+      roomInfoContainer: {
+        backgroundColor: '#810CA8',
+        height: 25,
+        width: 220,
+      },
+      roomInfo: {
+        fontSize: 15,
         color: '#fff',
         textAlign: 'center'
       },

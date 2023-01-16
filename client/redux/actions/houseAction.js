@@ -5,7 +5,7 @@ export const fetchHouses = () => {
     return async dispatch => {
 
         // logic to fetch houses from API
-        const result = await fetch('http://192.168.80.1:3000/api/houses');
+        const result = await fetch('http://192.168.50.114:3000/api/houses');
 
         const resultData = await result.json();
 
@@ -16,22 +16,22 @@ export const fetchHouses = () => {
     }
 }
 
-export const createHome = ({ title, image, homeType, price, yearBuilt, address, description }) => {
+export const createHome = ({ title, price, address, description, bedroom, bathroom, images }) => {
 
     return async dispatch => {
-        const response = await fetch('http://192.168.80.1:3000/api/houses', {
+        const response = await fetch('http://192.168.50.114:3000/api/houses', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 title,
-                image,
-                homeType,
                 price,
-                yearBuilt,
                 address,
-                description
+                description,
+                bedroom,
+                bathroom,
+                images
             })
         })
 

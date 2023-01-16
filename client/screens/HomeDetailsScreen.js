@@ -2,24 +2,22 @@ import React from 'react';
 import {StyleSheet, View, Text, ScrollView, Image} from 'react-native';
 import { useSelector } from 'react-redux';
 
+import Slider from '../components/Slider';
+
 const HomeDetailsScreen = (props) => {
 
   const {houseId} = props.route.params;
 
   const house = useSelector(state => state.house.houses.find(house => house._id == houseId))
-  console.log(house)
+  console.log(house.images)
     return (
         <ScrollView style={styles.background}>
             <View style={styles.container}>
                 <View style={styles.heading}>
                     <Text style={styles.title}>{house.title}</Text>
                 </View>
-                <View>
-                    <Image source={{uri: house.image}} style={styles.image} />
-                </View>
-                <View style={styles.group}>
-                    <Text style={styles.label}>Home Type: </Text>
-                    <Text style={styles.value}>{house.homeType}</Text>
+                <View style={styles.carousel}>
+                    <Slider data={house.images}/>
                 </View>
                 <View style={styles.group}>
                     <Text style={styles.label}>Price: </Text>
@@ -28,6 +26,10 @@ const HomeDetailsScreen = (props) => {
                 <View style={styles.group}>
                     <Text style={styles.label}>Address: </Text>
                     <Text style={styles.value}>{house.address}</Text>
+                </View>
+                <View style={styles.group}>
+                  <Text style={styles.label}>Home Info: </Text>
+                  <Text style={styles.value}>{house.bedroom} bedroom(s), {house.bathroom} bathroom(s)</Text>
                 </View>
                 <View style={styles.group}>
                     <Text style={styles.label}>Description: </Text>
@@ -44,7 +46,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    marginVertical: 20,
+    marginVertical: 10,
   },
   heading: {
     marginHorizontal: 20,
@@ -52,11 +54,16 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    color: "#ffffff"
+    color: "#ffffff",
+    fontWeight: 'bold',
+  },
+  carousel: {
+    width: 405,
+    height: 400
   },
   image: {
-    width: '100%',
-    height: 200
+    width: 400,
+    height: 400
   },
   group: {
     marginHorizontal: 20,

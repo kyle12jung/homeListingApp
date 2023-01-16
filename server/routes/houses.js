@@ -103,6 +103,7 @@ router.post(
 
             await Promise.all(imageUploadPromises)
                 .then(() => {
+                    console.log(house)
                     return house.save()
                 })
                 .then((result) => {
@@ -122,19 +123,21 @@ router.post(
 router.get("/", async(req, res) => {
     try {
         const houses = await House.find();
-        const modifiedHouses = houses.map(async house => {
-            const images = await Promise.all(house.images.map(async image => {
-                const url = s3.getSignedUrl('getObject', {
-                    Bucket: 'homehopimagesdev',
-                    Key: image
-                });
-                return url;
-            }));
-            house.images = images;
-            return house;
-        });
-        const resolvedHouses = await Promise.all(modifiedHouses);
-        res.send(resolvedHouses);
+        res.send(houses)
+            // const modifiedHouses = houses.map(async house => {
+            //     const images = await Promise.all(house.images.map(async image => {
+            //         const url = s3.getSignedUrl('getObject', {
+            //             Bucket: 'homehopimagesdev',
+            //             Key: image
+            //         });
+            //         return url;
+            //     }));
+            //     house.images = images;
+            //     return house;
+            // });
+            // const resolvedHouses = await Promise.all(modifiedHouses);
+            // console.log(resolvedHouses)
+            // res.send(resolvedHouses);
     } catch (err) {
         console.log(err);
         res.status(500).send(err);
@@ -154,7 +157,6 @@ router.get("/:id", async(req, res) => {
         const params = {
             Bucket: 'homehopimagesdev',
             Key: image,
-            Expires: 60 * 5 // URL will expire in 5 minutes
         };
         const url = await s3.getSignedUrl('getObject', params);
         return url;

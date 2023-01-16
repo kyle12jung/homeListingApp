@@ -34,10 +34,10 @@ const AddHomeScreen = () => {
         <Formik
             initialValues={{
                 title: '',
-                image: '',
-                homeType: '',
+                images: '',
+                bedroom: '',
+                bathroom: '',
                 price: '',
-                yearBuilt:'',
                 address: '',
                 description: ''
             }}
@@ -68,23 +68,24 @@ const AddHomeScreen = () => {
                         />
                         <Text style={styles.error}>{props.touched.title && props.errors.title}</Text>
                     </View>
+                    
                     <View style={styles.formGroup}>
-                        <Text style={styles.label}>Image URL</Text>
+                        <Text style={styles.label}>Number of Bedroom(s)</Text>
                         <TextInput 
                             style={styles.input}
-                            onChangeText={props.handleChange('image')}
-                            onBlur={props.handleBlur('image')}
-                            value={props.values.image}
+                            onChangeText={props.handleChange('bedroom')}
+                            onBlur={props.handleBlur('bedroom')}
+                            value={props.values.bedroom}
                         />
-                        <Text style={styles.error}>{props.touched.image && props.errors.image}</Text>
+                        <Text style={styles.error}>{props.touched.homeType && props.errors.homeType}</Text>
                     </View>
                     <View style={styles.formGroup}>
-                        <Text style={styles.label}>Home Type</Text>
+                        <Text style={styles.label}>Number of Bathroom(s)</Text>
                         <TextInput 
                             style={styles.input}
-                            onChangeText={props.handleChange('homeType')}
-                            onBlur={props.handleBlur('homeType')}
-                            value={props.values.homeType}
+                            onChangeText={props.handleChange('bathroom')}
+                            onBlur={props.handleBlur('bathroom')}
+                            value={props.values.bathroom}
                         />
                         <Text style={styles.error}>{props.touched.homeType && props.errors.homeType}</Text>
                     </View>
@@ -97,16 +98,6 @@ const AddHomeScreen = () => {
                             value={props.values.price}
                         />
                         <Text style={styles.error}>{props.touched.price && props.errors.price}</Text>
-                    </View>
-                    <View style={styles.formGroup}>
-                        <Text style={styles.label}>Year Built</Text>
-                        <TextInput 
-                            style={styles.input}
-                            onChangeText={props.handleChange('yearBuilt')}
-                            onBlur={props.handleBlur('yearBuilt')}
-                            value={props.values.yearBuilt}
-                        />
-                        <Text style={styles.error}>{props.touched.yearBuilt && props.errors.yearBuilt}</Text>
                     </View>
                     <View style={styles.formGroup}>
                         <Text style={styles.label}>Address</Text>

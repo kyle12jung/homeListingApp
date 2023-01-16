@@ -1,9 +1,10 @@
-import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native'
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, Image } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import Card from '../components/Card'
 import { FloatingAction } from "react-native-floating-action";
 import { useDispatch, useSelector } from 'react-redux';
 import * as houseAction from '../redux/actions/houseAction';
+
 
 const HomeListScreen = (props) => {
 
@@ -46,11 +47,11 @@ const HomeListScreen = (props) => {
             navigation={props.navigation}
             title={item.title}
             address={item.address}
-            homeType={item.homeType}
             description={item.description}
             price={item.price}
-            image={item.image}
-            yearBuilt={item.yearBuilt}
+            images={item.images}
+            bedroom={item.bedroom}
+            bathroom={item.bathroom}
             id={item._id}
           />
           )}
@@ -60,6 +61,7 @@ const HomeListScreen = (props) => {
         animated={false}
         showBackground={false}
         onPressMain={() => props.navigation.navigate('AddHome')}
+        color='#E5B8F4'
       />
     </View>
   )
@@ -74,7 +76,10 @@ const styles = StyleSheet.create({
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-  }
+    },
+    icon: {
+      tintColor: '#ffffff'
+    }
 })
 
 export default HomeListScreen
