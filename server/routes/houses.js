@@ -4,7 +4,7 @@ const bodyParser = require('body-parser')
 const multer = require('multer');
 const multerS3 = require('multer-s3');
 const AWS = require('aws-sdk');
-const { body, validationResult } = require("express-validator");
+// const { body, validationResult } = require("express-validator");
 const path = require('path');
 const mime = require('mime-types');
 
@@ -22,39 +22,56 @@ AWS.config.update({
 });
 const s3 = new AWS.S3()
 
-const storage = multerS3({
-    s3: s3,
-    bucket: 'homehopimagesdev',
-    metadata: function(req, file, cb) {
-        cb(null, { fieldName: file.fieldname });
-    },
-    key: function(req, file, cb) {
-        cb(null, Date.now().toString() + '.jpg')
-    }
-})
+// const storage = multerS3({
+//     s3: s3,
+//     bucket: 'homehopimagesdev',
+//     metadata: function(req, file, cb) {
+//         cb(null, { fieldName: file.fieldname });
+//     },
+//     key: function(req, file, cb) {
+//         cb(null, Date.now().toString() + '.jpg')
+//     }
+// })
 
-const upload = multer({
-    storage: storage,
-    fileFilter: function(req, file, callback) {
-        var ext = path.extname(file.originalname);
-        console.log(mime.lookup('.' + ext))
-        if (mime.lookup('.' + ext) != 'image/jpeg' && mime.lookup('.' + ext) != 'image/jpg' && mime.lookup('.' + ext) != 'image/png') {
-            return callback(new Error('Only images are allowed'))
-        }
-        callback(null, true)
+// const upload = multer({
+//     storage: storage,
+//     fileFilter: function(req, file, callback) {
+//         var ext = path.extname(file.originalname);
+//         console.log(mime.lookup('.' + ext))
+//         if (mime.lookup('.' + ext) != 'image/jpeg' && mime.lookup('.' + ext) != 'image/jpg' && mime.lookup('.' + ext) != 'image/png') {
+//             return callback(new Error('Only images are allowed'))
+//         }
+//         callback(null, true)
+//     }
+// });
+
+const uploadToS3 = (url, key) => {
+    const params = {
+        Bucket: 'my-bucket-name',
+        Key: key,
+        Body: request(url),
+        ContentType: 'image/jpeg'
     }
-});
+    s3.upload(params, (err, data) => {
+        if (err) {
+            console.log(err);
+            return res.status(500).json({ error: "Failed to upload image" });
+        } else {
+            console.log(`Image ${key} uploaded successfully`);
+        }
+    });
+}
 
 router.use(bodyParser.json());
 
 // handle form data validation
-router.use((req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(422).json({ errors: errors.array() });
-    }
-    next();
-});
+// router.use((req, res, next) => {
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty()) {
+//         return res.status(422).json({ errors: errors.array() });
+//     }
+//     next();
+// });
 
 // /api/houses
 router.post(

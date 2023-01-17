@@ -1,23 +1,27 @@
-import { View, Text, StyleSheet, ScrollView, TextInput, Button, Alert, ActivityIndicator } from 'react-native'
+import { View, Text, StyleSheet, ScrollView, TextInput, Button, Alert, ActivityIndicator, Image, FlatList } from 'react-native'
 import React, { useState } from 'react'
 import { Formik } from 'formik'
 import * as yup from 'yup'
 import * as houseAction from '../redux/actions/houseAction'
 import {useDispatch} from 'react-redux'
+import * as ImagePicker from 'expo-image-picker';
+import Slider from '../components/Slider'
+
 
 const formSchema = yup.object({
-    title: yup.string().required().min(3).max(50),
+    title: yup.string().required().min(3).max(20),
     price: yup.number().required(),
-    yearBuilt: yup.number().required(),
-    image: yup.string().required(),
+    bedroom: yup.number().required(),
+    bathroom: yup.number().required(),
     address: yup.string().required(),
     description: yup.string().required(),
-    homeType: yup.string().required(),
+    images: yup.array().of(yup.string().required()),
 })
 
 const AddHomeScreen = () => {
 
     const [isLoading, setIsLoading] = useState(false)
+    const [imageAdded, setImageAdded] = useState([])
 
     if (isLoading) {
         return (
@@ -34,7 +38,7 @@ const AddHomeScreen = () => {
         <Formik
             initialValues={{
                 title: '',
-                images: '',
+                images: [],
                 bedroom: '',
                 bathroom: '',
                 price: '',
@@ -44,6 +48,7 @@ const AddHomeScreen = () => {
             validationSchema={formSchema}
             onSubmit={(values) => {
                 setIsLoading(true)
+                values.images = imageAdded;
                 dispatch(houseAction.createHome(values))
                     .then(() => {
                         setIsLoading(false)
@@ -68,7 +73,50 @@ const AddHomeScreen = () => {
                         />
                         <Text style={styles.error}>{props.touched.title && props.errors.title}</Text>
                     </View>
-                    
+                    <View style={styles.formGroup}>
+                        <Text style={styles.label}>Add images (Up to 5)</Text>
+                        <Button
+                            title='Press to Add'
+                            color='#E5B8F4'
+                            onPress={async () => {
+                                let result = await ImagePicker.launchImageLibraryAsync({
+                                    mediaTypes: ImagePicker.MediaTypeOptions.All,
+                                    allowsEditing: true,
+                                    aspect: [1, 1],
+                                    quality: 1,
+                                });
+                            
+                                if (!result.canceled) {
+                                    setImageAdded([...imageAdded, result.assets[0].uri]);
+                                    props.handleChange("images")([...props.values.images, result.assets[0].uri])
+                                } else {
+                                    setImageAdded([])
+                                }
+                            }}
+                            
+                        />
+                        
+                        {
+                            imageAdded.length == 0 ? <Image source={require('../assets/images/default-image.jpg')} style={{ width: 331, height: 331}}/> : 
+                            <View style={styles.carousel}>
+                                <FlatList
+                                    data={imageAdded}
+                                    horizontal={true}
+                                    renderItem={({ item }) => {
+                                        return (
+                                            <View style={styles.itemContainer}>
+                                                <Image source={{uri: item}} style={{ width: 331, height: 331}}/>
+                                            </View>
+                                        )
+                                    }}
+                                    keyExtractor={item => item}
+                                    pagingEnabled={true}
+                                    showsHorizontalScrollIndicator={false}
+                                />
+                            </View>
+                        }
+                        <Text style={styles.error}>{props.touched.images && props.errors.images}</Text>
+                    </View>
                     <View style={styles.formGroup}>
                         <Text style={styles.label}>Number of Bedroom(s)</Text>
                         <TextInput 
@@ -168,7 +216,21 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-    }
+    },
+    carousel: {
+        width: 331,
+        height: 331
+    },
+    itemContainer: {
+        width: 331,
+        height: 331,
+        alignItems: "center",
+        justifyContent: "center"
+    },
+    // caroselItem: {
+    //     width: '100%',
+    //     height: 400
+    // },
 })
 
 export default AddHomeScreen

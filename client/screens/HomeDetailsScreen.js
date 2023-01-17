@@ -17,7 +17,7 @@ const HomeDetailsScreen = (props) => {
                     <Text style={styles.title}>{house.title}</Text>
                 </View>
                 <View style={styles.carousel}>
-                    <Slider data={house.images}/>
+                    <Slider data={house.images} style={styles.image}/>
                 </View>
                 <View style={styles.group}>
                     <Text style={styles.label}>Price: </Text>
@@ -58,11 +58,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   carousel: {
-    width: 405,
+    width: 400,
     height: 400
   },
   image: {
-    width: 400,
+    width: '100%',
     height: 400
   },
   group: {
