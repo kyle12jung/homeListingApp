@@ -1,9 +1,11 @@
 const express = require("express");
 const mongoose = require('mongoose')
 const bodyParser = require('body-parser')
-const multer = require('multer');
-const multerS3 = require('multer-s3');
+    // const multer = require('multer');
+    // const multerS3 = require('multer-s3');
 const AWS = require('aws-sdk');
+const axios = require("axios");
+
 // const { body, validationResult } = require("express-validator");
 const path = require('path');
 const mime = require('mime-types');
@@ -45,23 +47,6 @@ const s3 = new AWS.S3()
 //     }
 // });
 
-const uploadToS3 = (url, key) => {
-    const params = {
-        Bucket: 'my-bucket-name',
-        Key: key,
-        Body: request(url),
-        ContentType: 'image/jpeg'
-    }
-    s3.upload(params, (err, data) => {
-        if (err) {
-            console.log(err);
-            return res.status(500).json({ error: "Failed to upload image" });
-        } else {
-            console.log(`Image ${key} uploaded successfully`);
-        }
-    });
-}
-
 router.use(bodyParser.json());
 
 // handle form data validation
@@ -74,67 +59,120 @@ router.use(bodyParser.json());
 // });
 
 // /api/houses
-router.post(
-    "/",
-    upload.array('images'),
-    async(req, res) => {
-        if (req.body.title && req.body.title.length < 3) {
-            return res.status(400).json({ error: "Title should be at least 3 characters long" });
-        } else if (req.body.address && req.body.address.length < 5) {
-            return res.status(400).json({ error: "Title should be at least 5 characters long" });
-        } else if (req.body.description && req.body.description.length < 10) {
-            return res.status(400).json({ error: "Title should be at least 10 characters long" });
-        }
+router.post("/", async(req, res) => {
+    const house = new House({
+        title: req.body.title,
+        address: req.body.address,
+        bedroom: req.body.bedroom,
+        bathroom: req.body.bathroom,
+        description: req.body.description,
+        price: req.body.price,
+        images: []
+    });
 
-        const house = new House({
-            title: req.body.title,
-            address: req.body.address,
-            bedroom: req.body.bedroom,
-            bathroom: req.body.bathroom,
-            description: req.body.description,
-            price: req.body.price,
-        });
-
-        if (req.files && req.files.length) {
-            const imageUploadPromises = req.files.map(file => {
-                console.log(file)
-                return new Promise((resolve, reject) => {
-                    const params = {
-                        Bucket: "homehopimagesdev",
-                        Key: file.location,
-                        Body: file.originalname
-                    };
-                    console.log(params.Key)
-                    s3.upload(params, (err, data) => {
-                        if (err) {
-                            console.log(err);
-                            return res.status(500).json({ error: "Failed to upload image" });
-                        } else {
-                            console.log(`Image ${file.originalname} uploaded successfully`);
-                            house.images.push(params.Key);
-                            resolve();
-                        }
-                    });
+    try {
+        const imageUploadPromises = req.body.images.map(async(imageURL) => {
+            const key = Date.now().toString() + '.jpg';
+            const imageData = await axios.get(imageURL, { responseType: 'arraybuffer' });
+            const params = {
+                Bucket: 'homehopimagesdev',
+                Key: key,
+                Body: imageData.data,
+                ContentType: 'image/jpeg'
+            }
+            return new Promise((resolve, reject) => {
+                s3.upload(params, (err, data) => {
+                    if (err) {
+                        console.log(err);
+                        reject(err);
+                    } else {
+                        console.log(`Image ${key} uploaded successfully`);
+                        house.images.push(data.Location);
+                        resolve();
+                    }
                 });
             });
+        });
 
-            await Promise.all(imageUploadPromises)
-                .then(() => {
-                    console.log(house)
-                    return house.save()
-                })
-                .then((result) => {
-                    res.send({
-                        message: "House data created",
-                        data: result,
-                    });
-                })
-                .catch((err) => console.log(err));
-        }
-
-
+        await Promise.all(imageUploadPromises);
+        await house.save();
+        res.json({
+            message: "House successfully created",
+            data: house
+        });
+    } catch (err) {
+        res.status(500).json({
+            message: "Failed to create a house",
+            error: err.message
+        });
     }
-);
+});
+
+
+
+
+
+// router.post(
+//     "/",
+//     upload.array('images'),
+//     async(req, res) => {
+//         if (req.body.title && req.body.title.length < 3) {
+//             return res.status(400).json({ error: "Title should be at least 3 characters long" });
+//         } else if (req.body.address && req.body.address.length < 5) {
+//             return res.status(400).json({ error: "Title should be at least 5 characters long" });
+//         } else if (req.body.description && req.body.description.length < 10) {
+//             return res.status(400).json({ error: "Title should be at least 10 characters long" });
+//         }
+
+//         const house = new House({
+//             title: req.body.title,
+//             address: req.body.address,
+//             bedroom: req.body.bedroom,
+//             bathroom: req.body.bathroom,
+//             description: req.body.description,
+//             price: req.body.price,
+//         });
+
+//         if (req.files && req.files.length) {
+//             const imageUploadPromises = req.files.map(file => {
+//                 console.log(file)
+//                 return new Promise((resolve, reject) => {
+//                     const params = {
+//                         Bucket: "homehopimagesdev",
+//                         Key: file.location,
+//                         Body: file.originalname
+//                     };
+//                     console.log(params.Key)
+//                     s3.upload(params, (err, data) => {
+//                         if (err) {
+//                             console.log(err);
+//                             return res.status(500).json({ error: "Failed to upload image" });
+//                         } else {
+//                             console.log(`Image ${file.originalname} uploaded successfully`);
+//                             house.images.push(params.Key);
+//                             resolve();
+//                         }
+//                     });
+//                 });
+//             });
+
+//             await Promise.all(imageUploadPromises)
+//                 .then(() => {
+//                     console.log(house)
+//                     return house.save()
+//                 })
+//                 .then((result) => {
+//                     res.send({
+//                         message: "House data created",
+//                         data: result,
+//                     });
+//                 })
+//                 .catch((err) => console.log(err));
+//         }
+
+
+//     }
+// );
 
 // /api/houses
 router.get("/", async(req, res) => {
