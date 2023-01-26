@@ -5,8 +5,7 @@ import * as yup from 'yup'
 import * as houseAction from '../redux/actions/houseAction'
 import {useDispatch} from 'react-redux'
 import * as ImagePicker from 'expo-image-picker';
-import Slider from '../components/Slider'
-
+import * as FileSystem from 'expo-file-system';
 
 const formSchema = yup.object({
     title: yup.string().required().min(3).max(20),
@@ -15,13 +14,24 @@ const formSchema = yup.object({
     bathroom: yup.number().required(),
     address: yup.string().required(),
     description: yup.string().required(),
-    images: yup.array().of(yup.string().required()),
+    images: yup.string().required(),
 })
 
 const AddHomeScreen = () => {
 
     const [isLoading, setIsLoading] = useState(false)
-    const [imageAdded, setImageAdded] = useState([])
+    const [imageURLs, setImageURLs] = useState([])
+
+    const convertToValidURL = (fileSystemURL) => {
+          FileSystem.getInfoAsync(fileSystemURL)
+            .then(({ uri }) => {
+                setImageURLs(prevImageURLs => [...prevImageURLs, uri]);          
+                console.log(imageURLs)
+            })
+            .catch(err => console.log(err))
+            
+    };
+    
 
     if (isLoading) {
         return (
@@ -38,7 +48,7 @@ const AddHomeScreen = () => {
         <Formik
             initialValues={{
                 title: '',
-                images: [],
+                images: '',
                 bedroom: '',
                 bathroom: '',
                 price: '',
@@ -47,17 +57,24 @@ const AddHomeScreen = () => {
             }}
             validationSchema={formSchema}
             onSubmit={(values) => {
-                setIsLoading(true)
-                values.images = imageAdded;
-                dispatch(houseAction.createHome(values))
-                    .then(() => {
-                        setIsLoading(false)
-                        Alert.alert('Created Successfully')
-                    })
-                    .catch(() => {
-                        setIsLoading(false)
-                        Alert.alert('An error occurred. Try Again.', [{text: 'OK'}])
-                    })
+                if (imageURLs.length > 0) {
+                    setIsLoading(true)
+                    const imagesConverted = JSON.stringify(imageURLs.join(','))
+                    values.images = imagesConverted;
+                    console.log(values)
+                    dispatch(houseAction.createHome(values))
+                        .then(() => {
+                            setIsLoading(false)
+                            Alert.alert('Created Successfully')
+                        })
+                        .catch(() => {
+                            setIsLoading(false)
+                            setImageURLs([])
+                            Alert.alert('An error occurred. Try Again.', [{text: 'OK'}])
+                        })
+                } else {
+                    Alert.alert('Please add at least one image')
+                }
             }}
         >
             {
@@ -87,20 +104,28 @@ const AddHomeScreen = () => {
                                 });
                             
                                 if (!result.canceled) {
-                                    setImageAdded([...imageAdded, result.assets[0].uri]);
-                                    props.handleChange("images")([...props.values.images, result.assets[0].uri])
+                                    const filepath = result.assets[0].uri;
+                                    try {
+                                        convertToValidURL(filepath);
+                                    } catch (error) {
+                                        console.error(error);
+                                        Alert.alert('An error occurred. Try Again.', [{text: 'OK'}])
+                                    }
                                 } else {
-                                    setImageAdded([])
+                                    setImageURLs([])
+                                    Alert.alert('An error occurred. Try Again. Added Images will be deleted. You will have to readd the images.', [{text: 'OK'}])
                                 }
+                                
+                                
                             }}
                             
                         />
                         
                         {
-                            imageAdded.length == 0 ? <Image source={require('../assets/images/default-image.jpg')} style={{ width: 331, height: 331}}/> : 
+                            imageURLs.length == 0 ? <Image source={require('../assets/images/default-image.jpg')} style={{ width: 331, height: 331}}/> : 
                             <View style={styles.carousel}>
                                 <FlatList
-                                    data={imageAdded}
+                                    data={imageURLs}
                                     horizontal={true}
                                     renderItem={({ item }) => {
                                         return (

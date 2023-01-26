@@ -18,29 +18,34 @@ export const fetchHouses = () => {
 
 export const createHome = ({ title, price, address, description, bedroom, bathroom, images }) => {
 
-    return async dispatch => {
-        const response = await fetch('http://192.168.50.114:3000/api/houses', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                title,
-                price,
-                address,
-                description,
-                bedroom,
-                bathroom,
-                images
-            })
-        })
+    try {
 
-        const responseData = await response.json();
-        console.log(responseData)
-        dispatch({
-            type: CREATE_HOUSES,
-            payload: responseData
-        })
+        return async dispatch => {
+            const response = await fetch('http://192.168.50.114:3000/api/houses', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    title,
+                    price,
+                    address,
+                    description,
+                    bedroom,
+                    bathroom,
+                    images
+                })
+            })
+
+            const responseData = await response.json();
+            console.log(responseData)
+            dispatch({
+                type: CREATE_HOUSES,
+                payload: responseData
+            })
+        }
+    } catch (err) {
+        console.log(err)
     }
 
 }

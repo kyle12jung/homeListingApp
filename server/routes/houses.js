@@ -68,10 +68,13 @@ router.post("/", async(req, res) => {
         description: req.body.description,
         price: req.body.price,
         images: []
+
     });
 
     try {
-        const imageUploadPromises = req.body.images.map(async(imageURL) => {
+        const imageUrls = req.body.images.split(",");
+        console.log(imageUrls)
+        const imageUploadPromises = imageUrls.map(async(imageURL) => {
             const key = Date.now().toString() + '.jpg';
             const imageData = await axios.get(imageURL, { responseType: 'arraybuffer' });
             const params = {
