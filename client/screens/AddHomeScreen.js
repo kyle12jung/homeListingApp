@@ -5,16 +5,21 @@ import * as yup from 'yup'
 import * as houseAction from '../redux/actions/houseAction'
 import {useDispatch} from 'react-redux'
 import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system';
+// import * as FileSystem from 'expo-file-system';
+import { useEffect } from 'react'
 
 const formSchema = yup.object({
     title: yup.string().required().min(3).max(20),
     price: yup.number().required(),
     bedroom: yup.number().required(),
     bathroom: yup.number().required(),
-    address: yup.string().required(),
-    description: yup.string().required(),
-    images: yup.string().required(),
+    address: yup.string().required().min(5),
+    description: yup.string().required().min(10),
+    images: yup.array().of(yup.string()).required().test(
+        5,
+        'You should upload at least 1 image. You can only upload up to 5 images.',
+        (value) => value.length <= 5 && value.length > 0
+    ),
 })
 
 const AddHomeScreen = () => {
@@ -22,16 +27,9 @@ const AddHomeScreen = () => {
     const [isLoading, setIsLoading] = useState(false)
     const [imageURLs, setImageURLs] = useState([])
 
-    const convertToValidURL = (fileSystemURL) => {
-          FileSystem.getInfoAsync(fileSystemURL)
-            .then(({ uri }) => {
-                setImageURLs(prevImageURLs => [...prevImageURLs, uri]);          
-                console.log(imageURLs)
-            })
-            .catch(err => console.log(err))
-            
-    };
-    
+    useEffect(() => {
+        console.log(imageURLs)
+    }, [imageURLs])
 
     if (isLoading) {
         return (
@@ -48,7 +46,7 @@ const AddHomeScreen = () => {
         <Formik
             initialValues={{
                 title: '',
-                images: '',
+                images: [],
                 bedroom: '',
                 bathroom: '',
                 price: '',
@@ -57,24 +55,19 @@ const AddHomeScreen = () => {
             }}
             validationSchema={formSchema}
             onSubmit={(values) => {
-                if (imageURLs.length > 0) {
-                    setIsLoading(true)
-                    const imagesConverted = JSON.stringify(imageURLs.join(','))
-                    values.images = imagesConverted;
-                    console.log(values)
-                    dispatch(houseAction.createHome(values))
-                        .then(() => {
-                            setIsLoading(false)
-                            Alert.alert('Created Successfully')
+                setIsLoading(true)
+                // console.log(values)
+                dispatch(houseAction.createHome(values))
+                    .then(() => {
+                        setIsLoading(false)
+                        Alert.alert('Created Successfully')
+                    })
+                    .catch(() => {
+                        setIsLoading(false)
+                        setImageURLs([])
+                        Alert.alert('An error occurred. Try Again.', [{text: 'OK'}])
                         })
-                        .catch(() => {
-                            setIsLoading(false)
-                            setImageURLs([])
-                            Alert.alert('An error occurred. Try Again.', [{text: 'OK'}])
-                        })
-                } else {
-                    Alert.alert('Please add at least one image')
-                }
+ 
             }}
         >
             {
@@ -98,26 +91,23 @@ const AddHomeScreen = () => {
                             onPress={async () => {
                                 let result = await ImagePicker.launchImageLibraryAsync({
                                     mediaTypes: ImagePicker.MediaTypeOptions.All,
+                                    allowsMultiple: true,
                                     allowsEditing: true,
                                     aspect: [1, 1],
                                     quality: 1,
                                 });
-                            
                                 if (!result.canceled) {
-                                    const filepath = result.assets[0].uri;
-                                    try {
-                                        convertToValidURL(filepath);
-                                    } catch (error) {
-                                        console.error(error);
-                                        Alert.alert('An error occurred. Try Again.', [{text: 'OK'}])
-                                    }
+                                    const uri = result.assets[0].uri
+                                    setImageURLs(prevImageURLs => {
+                                        props.setFieldValue('images', [...prevImageURLs, uri]);
+                                        return [...prevImageURLs, uri];
+                                    });
                                 } else {
-                                    setImageURLs([])
-                                    Alert.alert('An error occurred. Try Again. Added Images will be deleted. You will have to readd the images.', [{text: 'OK'}])
+                                    Alert.alert('An error occurred. Try Again.', [{text: 'OK'}]);
                                 }
-                                
-                                
                             }}
+                            
+                            
                             
                         />
                         
@@ -134,16 +124,17 @@ const AddHomeScreen = () => {
                                             </View>
                                         )
                                     }}
-                                    keyExtractor={item => item}
+                                    keyExtractor={(item,i) => item+i.toString()}
                                     pagingEnabled={true}
                                     showsHorizontalScrollIndicator={false}
                                 />
                             </View>
                         }
+                        <Text style={styles.label}>Swipe to see the added images</Text>
                         <Text style={styles.error}>{props.touched.images && props.errors.images}</Text>
                     </View>
                     <View style={styles.formGroup}>
-                        <Text style={styles.label}>Number of Bedroom(s)</Text>
+                        <Text style={styles.label}>Number of Bedroom(s) (0 for a studio)</Text>
                         <TextInput 
                             style={styles.input}
                             onChangeText={props.handleChange('bedroom')}

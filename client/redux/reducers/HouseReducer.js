@@ -14,6 +14,7 @@ export default function(state = initialState, action) {
             }
 
         case CREATE_HOUSES:
+            // console.log('action.payload.data')
             // console.log(action.payload.data)
             return {
                 ...state,

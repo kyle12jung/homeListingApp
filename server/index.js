@@ -2,7 +2,6 @@ const express = require('express')
 const mongoose = require('mongoose')
 const houses = require('./routes/houses')
 const app = express();
-const Grid = require("gridfs-stream");
 
 app.use(express.json())
 
@@ -32,13 +31,3 @@ mongoose.connect(uri)
         app.listen(port, () => console.log(`listening on ${port}`))
     })
     .catch(err => console.log(err))
-
-const conn = mongoose.connection;
-let gfs;
-conn.once("open", () => {
-    gfs = Grid(conn.db, mongoose.mongo);
-    gfs.collection("uploads");
-});
-
-
-module.exports = gfs;
