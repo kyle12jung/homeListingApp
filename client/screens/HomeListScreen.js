@@ -32,7 +32,7 @@ const HomeListScreen = (props) => {
   if(houses.length === 0 && !isLoading) {
     return (
       <View style={styles.centered}>
-        <Text>No home found. You can add one!</Text>
+        <Text style={styles.noHomeText}>No home found. You can add one!</Text>
       </View>
     )
   }
@@ -53,16 +53,18 @@ const HomeListScreen = (props) => {
             bedroom={item.bedroom}
             bathroom={item.bathroom}
             id={item._id}
+            userID={item.user}
+            userName={item.userName}
           />
           )}
       />
-      <FloatingAction 
+      {/* <FloatingAction 
         position='right'
         animated={false}
         showBackground={false}
         onPressMain={() => props.navigation.navigate('AddHome')}
         color='#E5B8F4'
-      />
+      /> */}
     </View>
   )
 }
@@ -76,9 +78,13 @@ const styles = StyleSheet.create({
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
+      backgroundColor: '#2D033B'
     },
     icon: {
       tintColor: '#ffffff'
+    },
+    noHomeText: {
+      color: '#ffffff'
     }
 })
 

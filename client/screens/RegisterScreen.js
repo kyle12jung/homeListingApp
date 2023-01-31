@@ -48,7 +48,7 @@ const RegisterScreen = (navData) => {
               if(result.success) {
                 try {  
                   await AsyncStorage.setItem('token', result.token)
-                  navData.navigation.navigate("HomeList")
+                  navData.navigation.navigate("App")
                 } catch(err) {
                   console.log(err)
                 }

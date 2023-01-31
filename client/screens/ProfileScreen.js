@@ -34,15 +34,16 @@ const ProfileScreen = props => {
     return(
         <View style={styles.container}>
             <View>
-                <Text style={styles.text}>Welcome {fullName ? fullName: ''}</Text>
+                <Text style={styles.text}>Name: {fullName ? fullName: ''}</Text>
             </View>
             <View>
-                <Text style={styles.text}>Your Email: {email ? email : ''}</Text>
+                <Text style={styles.text}>Email: {email ? email : ''}</Text>
             </View>
             <View>
                 <Button 
                     title="Logout"
                     onPress={() => logout(props)}
+                    color='#E5B8F4'
                 />
             </View>
         </View>
@@ -52,10 +53,12 @@ const ProfileScreen = props => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 40
+        padding: 40,
+        backgroundColor: '#2D033B',
     },
     text: {
-        fontSize: 22
+        fontSize: 22,
+        color: '#ffffff'
     }
 })
 

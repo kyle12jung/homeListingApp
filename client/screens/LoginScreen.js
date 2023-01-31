@@ -19,6 +19,7 @@ import * as authAction from '../redux/actions/authActions'
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+
 const formSchema = yup.object({
     email: yup.string().email().required(),
     password: yup.string().required().min(8)
@@ -45,8 +46,7 @@ const LoginScreen = navData => {
               if(result.success) {
                 try {  
                   await AsyncStorage.setItem('token', result.token)
-
-                  // navData.navigation.navigate('HomeList')
+                  navData.navigation.navigate('App')
                 } catch(err) {
                   console.log(err)
                 }

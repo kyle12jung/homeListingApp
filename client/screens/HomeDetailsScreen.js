@@ -9,12 +9,12 @@ const HomeDetailsScreen = (props) => {
   const {houseId} = props.route.params;
 
   const house = useSelector(state => state.house.houses.find(house => house._id == houseId))
-  console.log(house.images)
     return (
         <ScrollView style={styles.background}>
             <View style={styles.container}>
                 <View style={styles.heading}>
                     <Text style={styles.title}>{house.title}</Text>
+                    <Text style={styles.userName}>{house.userName}</Text>
                 </View>
                 <View style={styles.carousel}>
                     <Slider data={house.images} style={styles.image}/>
@@ -50,10 +50,16 @@ const styles = StyleSheet.create({
   },
   heading: {
     marginHorizontal: 20,
-    marginBottom: 10
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  userName: {
+    color: '#ffffff'
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     color: "#ffffff",
     fontWeight: 'bold',
   },

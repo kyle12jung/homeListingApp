@@ -76,9 +76,9 @@ router.post(
             bathroom: req.body.bathroom,
             description: req.body.description,
             price: req.body.price,
+            user: req.body.user,
+            userName: req.body.userName,
         });
-
-        console.log(house)
 
         if (req.files && req.files.length) {
             const imageUploadPromises = req.files.map(file => {
@@ -164,8 +164,12 @@ router.get("/:id", async(req, res) => {
         return url;
     }));
     house.images = images;
-    console.log(house)
-    await res.send(house);
+    const result = {
+        house,
+        user
+    };
+    console.log(result)
+    await res.send(result);
 });
 
 

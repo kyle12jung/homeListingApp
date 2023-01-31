@@ -16,7 +16,7 @@ export const fetchHouses = () => {
     }
 }
 
-export const createHome = ({ title, price, address, description, bedroom, bathroom, images }) => {
+export const createHome = ({ title, price, address, description, bedroom, bathroom, images, user, userName }) => {
 
 
     try {
@@ -30,6 +30,8 @@ export const createHome = ({ title, price, address, description, bedroom, bathro
             formData.append('description', description);
             formData.append('bedroom', bedroom);
             formData.append('bathroom', bathroom);
+            formData.append('user', user);
+            formData.append('userName', userName);
             images.forEach((image, i) => {
                 formData.append('images', {
                     uri: image, // this is the path to your file. see Expo ImagePicker or React Native ImagePicker

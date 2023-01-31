@@ -18,7 +18,7 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 
-const StackNavigator = () => {
+const HomeStackNavigator = () => {
 
   return (
     <Stack.Navigator
@@ -34,13 +34,54 @@ const StackNavigator = () => {
             name='HomeDetails'
             component={HomeDetailsScreen}
         />
-        <Stack.Screen 
-            name='AddHome'
-            component={AddHomeScreen}
-        />
     </Stack.Navigator>
   )
 }
+
+function ProfileStackNavigator() {
+    return (
+        <Stack.Navigator
+			screenOptions={{
+				headerShown: false
+			}}
+		>
+            <Stack.Screen 
+                name='Profile'
+                component={ProfileScreen}
+            />
+        </Stack.Navigator>
+    )
+}
+
+function LoggedInNavigator() {
+    return (
+			<Tab.Navigator
+				screenOptions={({route}) => ({
+					tabBarIcon: () => {
+							let iconName
+							if (route.name=='Home') iconName = 'home'
+							else if (route.name=='My Info') iconName = 'info'
+							return <MaterialIcons name={iconName} size={24} />
+					},
+					headerShown: false
+				})}
+			>
+					<Tab.Screen 
+						name='Home'
+						component={HomeStackNavigator}
+					/>
+					<Tab.Screen 
+						name='Post'
+						component={AddHomeScreen}
+					/>
+					<Tab.Screen 
+						name='My Info'
+						component={ProfileStackNavigator}
+					/>
+			</Tab.Navigator>
+    )
+}
+
 
 const LoginStackNavigator = () => {
 	return (
@@ -53,78 +94,44 @@ const LoginStackNavigator = () => {
             name="Login"
             component={LoginScreen}
             options={{ headerShown: false }}
-        />
-        <Stack.Screen 
-            name="Register"
-            component={RegisterScreen}
-            options={{ headerShown: false }}
-        />
+			/>
+			<Stack.Screen 
+				name="Register"
+				component={RegisterScreen}
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen 
+				name="Home"
+				component={HomeStackNavigator}
+				options={{ headerShown: false }}
+			/>
 		</Stack.Navigator>
 	)
-}
-
-function ProfileStackNavigator() {
-    return (
-        <Stack.Navigator
-					screenOptions={{
-						headerShown: false
-					}}
-				>
-            <Stack.Screen 
-                name='Profile'
-                component={ProfileScreen}
-            />
-        </Stack.Navigator>
-    )
-}
-
-function LoggedInNavigator() {
-    return (
-			<Tab.Navigator
-					screenOptions={({route}) => ({
-							tabBarIcon: () => {
-									let iconName
-									if (route.name=='Home') iconName = 'home'
-									else if (route.name=='My Info') iconName = 'info'
-									return <MaterialIcons name={iconName} size={24} />
-							},
-							headerShown: false
-					})}
-			>
-					<Tab.Screen 
-							name='Home'
-							component={StackNavigator}
-					/>
-					<Tab.Screen 
-							name='My Info'
-							component={ProfileStackNavigator}
-					/>
-			</Tab.Navigator>
-    )
 }
 
 function AppsNavigator() {
 
 	const [isLoading, setIsLoading] = useState(false)
-	const [loaded, setLoaded] = useState(false)
+	const [signedIn, setSignedIn] = useState(false)
 
 	const loadProfile = async () => {
+		setIsLoading(true)
 		const token = await AsyncStorage.getItem('token');
 		if(!token) {
-			setLoaded(false)
+			setSignedIn(false)
 			console.log('login failed')
 		} else {
-			setLoaded(true)
+			setSignedIn(true)
 			console.log('login successful')
 		}
+		setIsLoading(false)
 	}
+	
 
 	useEffect(() => {
-		setIsLoading(true)
-		loadProfile();
-		setIsLoading(false)
+		loadProfile();	
 		console.log('login triggered')
-	}, [loaded]);
+	}, []);
 
 	if (isLoading) {
     return (
@@ -141,16 +148,25 @@ function AppsNavigator() {
 				// 	headerShown: false
 				// }}
 			>
-				{loaded ? (
+				{!signedIn ? (
 					<Stack.Screen 
-							name='App'
-							component={LoggedInNavigator}
+						name='Authenticate'
+						component={LoginStackNavigator}
 					/>
 				):(
+					<></>
+				)}
+				<Stack.Screen 
+					name='App'
+					component={LoggedInNavigator}
+				/>
+				{signedIn ? (
 					<Stack.Screen 
-							name='Authenticate'
-							component={LoginStackNavigator}
+						name='Authenticate'
+						component={LoginStackNavigator}
 					/>
+				):(
+					<></>
 				)}
 			</Stack.Navigator>
 		</NavigationContainer>

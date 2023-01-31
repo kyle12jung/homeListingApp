@@ -1,12 +1,13 @@
 import { View, Text, StyleSheet, ScrollView, TextInput, Button, Alert, ActivityIndicator, Image, FlatList } from 'react-native'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Formik } from 'formik'
 import * as yup from 'yup'
 import * as houseAction from '../redux/actions/houseAction'
 import {useDispatch} from 'react-redux'
 import * as ImagePicker from 'expo-image-picker';
-// import * as FileSystem from 'expo-file-system';
-import { useEffect } from 'react'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+const jwtDecode = require('jwt-decode');
+
 
 const formSchema = yup.object({
     title: yup.string().required().min(3).max(20),
@@ -20,16 +21,31 @@ const formSchema = yup.object({
         'You should upload at least 1 image. You can only upload up to 5 images.',
         (value) => value.length <= 5 && value.length > 0
     ),
+    user: yup.string(),
+    userName: yup.string(),
 })
 
-const AddHomeScreen = () => {
+const AddHomeScreen = (navData) => {
 
-    const [isLoading, setIsLoading] = useState(false)
-    const [imageURLs, setImageURLs] = useState([])
+    const [isLoading, setIsLoading] = useState(false);
+    const [imageURLs, setImageURLs] = useState([]);
+    const [fullName, setFullName] = useState('');
+    const [userID, setUserID] = useState('');
+
+    const loadProfile = async () => {
+        const token = await AsyncStorage.getItem('token');
+        const decoded = jwtDecode(token);
+        setFullName(decoded.fullName);
+        setUserID(decoded._id)
+    }
 
     useEffect(() => {
-        console.log(imageURLs)
-    }, [imageURLs])
+        loadProfile();
+        console.log(userID)
+    },[]);
+    // useEffect(() => {
+    //     console.log(imageURLs)
+    // }, [imageURLs])
 
     if (isLoading) {
         return (
@@ -51,16 +67,21 @@ const AddHomeScreen = () => {
                 bathroom: '',
                 price: '',
                 address: '',
-                description: ''
+                description: '',
+                user: '',
+                userName: '',
             }}
             validationSchema={formSchema}
             onSubmit={(values) => {
                 setIsLoading(true)
-                // console.log(values)
+                values.user = userID
+                values.userName = fullName
+                console.log(values)
                 dispatch(houseAction.createHome(values))
                     .then(() => {
                         setIsLoading(false)
                         Alert.alert('Created Successfully')
+                        navData.navigation.navigate('Home')
                     })
                     .catch(() => {
                         setIsLoading(false)
@@ -106,9 +127,6 @@ const AddHomeScreen = () => {
                                     Alert.alert('An error occurred. Try Again.', [{text: 'OK'}]);
                                 }
                             }}
-                            
-                            
-                            
                         />
                         
                         {
