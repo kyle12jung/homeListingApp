@@ -1,11 +1,13 @@
 export const FETCH_HOUSES = 'FETCH_HOUSES';
 export const CREATE_HOUSES = 'CREATE_HOUSES';
 
+const schoolIP = '10.105.254.28';
+const homeIP = '192.168.50.114:3000';
 export const fetchHouses = () => {
     return async dispatch => {
 
         // logic to fetch houses from API
-        const result = await fetch('http://192.168.50.114:3000/api/houses');
+        const result = await fetch(`http://${schoolIP}:3000/api/houses`);
 
         const resultData = await result.json();
 
@@ -40,7 +42,7 @@ export const createHome = ({ title, price, address, description, bedroom, bathro
                 });
             })
 
-            const response = await fetch('http://192.168.50.114:3000/api/houses', {
+            const response = await fetch(`http://${schoolIP}:3000/api/houses`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'multipart/form-data',

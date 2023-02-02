@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, Image } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import Card from '../components/Card'
-import { FloatingAction } from "react-native-floating-action";
+// import { FloatingAction } from "react-native-floating-action";
 import { useDispatch, useSelector } from 'react-redux';
 import * as houseAction from '../redux/actions/houseAction';
 

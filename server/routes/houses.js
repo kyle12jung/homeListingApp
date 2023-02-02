@@ -216,8 +216,34 @@ router.delete("/:id", (req, res) => {
         .catch((err) => console.log(err));
 });
 
-module.exports = router;
+// api/houses/user/:id
+// router.get("/user/:id", async(req, res) => {
+//     const houseID = req.params.id;
+//     const house = await House.findById(houseID);
+//     if (!house) {
+//         return res.status(404).json({
+//             error: "No house found"
+//         });
+//     }
+//     const images = await Promise.all(house.images.map(async image => {
+//         const params = {
+//             Bucket: 'homehopimagesdev',
+//             Key: image,
+//         };
+//         const url = await s3.getSignedUrl('getObject', params);
+//         return url;
+//     }));
+//     house.images = images;
+//     const result = {
+//         house,
+//         user
+//     };
+//     console.log(result)
+//     await res.send(result);
+// })
 
+
+module.exports = router;
 
 // api/houses/id
 // router.put(

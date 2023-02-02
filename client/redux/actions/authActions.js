@@ -3,13 +3,16 @@ export const REGISTER_USER_FAIL = 'REGISTER_USER_FAIL'
 export const LOGIN_USER_SUCCESS = 'LOGIN_USER_SUCCESS'
 export const LOGIN_USER_FAIL = 'LOGIN_USER_FAIL'
 
+const schoolIP = '10.105.254.28';
+const homeIP = '192.168.50.114:3000';
+
 export const registerUser = (authData) => {
     const { fullName, email, password } = authData;
 
     return async dispatch => {
 
         // logic to make a post request to create the user
-        const result = await fetch('http://192.168.50.114:3000/api/users/register', {
+        const result = await fetch(`http://${schoolIP}:3000/api/users/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -46,7 +49,7 @@ export const loginUser = (authData) => {
 
         // logic to make a post request to login
         // logic to make a post request to create the user
-        const result = await fetch('http://192.168.50.114:3000/api/users/login', {
+        const result = await fetch(`http://${schoolIP}:3000/api/users/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
